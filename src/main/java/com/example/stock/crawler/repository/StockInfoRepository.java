@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StockInfoRepository extends JpaRepository<StockInfoEntity, String> {
+    StockInfoEntity findByShortCode(String shortCode);
 }

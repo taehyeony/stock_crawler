@@ -1,15 +1,16 @@
 package com.example.stock.crawler.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Objects;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity(name="stock_price")
 @Table(name="stock_price",indexes = {
             @Index(name = "idx_price_volume_value", columnList = "closing_price, price_change_rate, trading_value")
@@ -53,4 +54,40 @@ public class StockPriceEntity {
 
     @Column(nullable = false)
     private Long listedStockNum;
+
+    @Temporal(TemporalType.DATE)
+    @Column(nullable = false)
+    private LocalDate date;
+
+    @Override
+    public String toString() {
+        return "StockPriceEntity{" +
+                "stockPriceId=" + stockPriceId +
+                ", stockInfoEntity=" + (stockInfoEntity != null ? stockInfoEntity.getShortCode() : "null") +
+                ", closingPrice=" + closingPrice +
+                ", priceChange=" + priceChange +
+                ", priceChangeRate=" + priceChangeRate +
+                ", openingPrice=" + openingPrice +
+                ", highestPrice=" + highestPrice +
+                ", lowestPrice=" + lowestPrice +
+                ", tradingVolume=" + tradingVolume +
+                ", tradingValue=" + tradingValue +
+                ", marketCap=" + marketCap +
+                ", listedStockNum=" + listedStockNum +
+                ", date=" + date +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StockPriceEntity stockPriceEntity = (StockPriceEntity) o;
+        return Objects.equals(stockInfoEntity, stockPriceEntity.stockInfoEntity) && Objects.equals(date, stockPriceEntity.date);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(stockInfoEntity,date);
+    }
 }
