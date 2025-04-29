@@ -25,7 +25,10 @@ public class WebDriverConfig {
         chromeOptions.addArguments("--disable-dev-shm-usage");
         chromeOptions.addArguments("--disable-gpu");
         chromeOptions.addArguments("--window-size=1920,1080");
-//        chromeOptions.addArguments("--headless"); // 서버에서 돌릴 때 필수
+        chromeOptions.addArguments("--disable-extensions");
+        chromeOptions.addArguments("--remote-allow-origins=*");
+        chromeOptions.addArguments("user-agent=Mozilla/5.0");
+//        chromeOptions.addArguments("--headless");
 
         WebDriver driver = new ChromeDriver(chromeOptions);
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));

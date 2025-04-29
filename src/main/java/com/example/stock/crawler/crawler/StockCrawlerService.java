@@ -48,7 +48,7 @@ public class StockCrawlerService {
         //주식 정보 Set
         Set<StockInfoEntity> stockInfoList = new HashSet<>();
         int previousSize = 0;
-        
+
         try {
             //초기에 테이블 렌더링이 완료될 때 까지 Wait
             WebElement tableTemp = wait.until(driver -> {
@@ -78,43 +78,26 @@ public class StockCrawlerService {
 
                 //화면에 존재하는 row를 한줄 씩 읽어오기
                 for(WebElement row: rows){
-                    String standardCode = row.findElement(By.cssSelector("td:nth-child(1)")).getText();
-                    if(standardCode.isBlank()){
-                        continue;
-                    }
-                    String shortCode = row.findElement(By.cssSelector("td:nth-child(2)")).getText();
-                    String korStockName = row.findElement(By.cssSelector("td:nth-child(3)")).getText();
-                    String korShortStockName = row.findElement(By.cssSelector("td:nth-child(4)")).getText();
-                    String engStockName = row.findElement(By.cssSelector("td:nth-child(5)")).getText();
+                    String standardCode = row.findElement(By.cssSelector("td:nth-child(1)")).getAttribute("textContent");
+                    String shortCode = row.findElement(By.cssSelector("td:nth-child(2)")).getAttribute("textContent");
+                    String korStockName = row.findElement(By.cssSelector("td:nth-child(3)")).getAttribute("textContent");
+                    String korShortStockName = row.findElement(By.cssSelector("td:nth-child(4)")).getAttribute("textContent");
+                    String engStockName = row.findElement(By.cssSelector("td:nth-child(5)")).getAttribute("textContent");
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
-                    Date listingDate = simpleDateFormat.parse(row.findElement(By.cssSelector("td:nth-child(6)")).getText());
-                    MarketType marketType = MarketType.valueOf(row.findElement(By.cssSelector("td:nth-child(7)")).getText());
-
-                    //화면을 오른쪽으로 스크롤
-                    js.executeScript("""
-                                        let scroller = document.querySelector('#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-FREEZE-SCROLLER');
-                                        scroller.scrollLeft += 700;
-                                        scroller.dispatchEvent(new Event('scroll'));""");
-                    Thread.sleep(10);
-
-                    CertificateType certificateType = CertificateType.valueOf(row.findElement(By.cssSelector("td:nth-child(8)")).getText());
-                    String department = row.findElement(By.cssSelector("td:nth-child(9)")).getText();
-                    StockType stockType = StockType.valueOf(row.findElement(By.cssSelector("td:nth-child(10)")).getText());
+                    Date listingDate = simpleDateFormat.parse(row.findElement(By.cssSelector("td:nth-child(6)")).getAttribute("textContent"));
+                    MarketType marketType = MarketType.valueOf(row.findElement(By.cssSelector("td:nth-child(7)")).getAttribute("textContent"));
+                    CertificateType certificateType = CertificateType.valueOf(row.findElement(By.cssSelector("td:nth-child(8)")).getAttribute("textContent"));
+                    String department = row.findElement(By.cssSelector("td:nth-child(9)")).getAttribute("textContent");
+                    StockType stockType = StockType.valueOf(row.findElement(By.cssSelector("td:nth-child(10)")).getAttribute("textContent"));
                     int faceValue = 0;
                     try {
-                        faceValue = Integer.parseInt(row.findElement(By.cssSelector("td:nth-child(11)")).getText().replace(",",""));
+                        faceValue = Integer.parseInt(row.findElement(By.cssSelector("td:nth-child(11)")).getAttribute("textContent").replace(",",""));
                     } catch (NumberFormatException e){
                         faceValue = -1; //무액면인 경우
                     }
-                    Long listedStockNum = Long.valueOf(row.findElement(By.cssSelector("td:nth-child(12)")).getText().replace(",",""));
-
-                    //다시 화면을 원 위치로 스크롤
-                    js.executeScript("""
-                                        let scroller = document.querySelector('#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-FREEZE-SCROLLER');
-                                        scroller.scrollLeft -= 700;
-                                        scroller.dispatchEvent(new Event('scroll'));""");
+                    Long listedStockNum = Long.valueOf(row.findElement(By.cssSelector("td:nth-child(12)")).getAttribute("textContent").replace(",",""));
                     Thread.sleep(10);
-                    
+
                     StockInfoEntity stockInfo = StockInfoEntity.builder()
                             .standardCode(standardCode)
                             .shortCode(shortCode)
@@ -129,14 +112,13 @@ public class StockCrawlerService {
                             .faceValue(faceValue)
                             .listedStockNum(listedStockNum)
                             .build();
-                    System.out.println(stockInfo.toString());
                     stockInfoList.add(stockInfo);
                 }
 
                 //화면을 아래로 스크롤
                 js.executeScript("""
                                         let scroller = document.querySelector('#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-FREEZE-SCROLLER');
-                                        scroller.scrollTop += 500;
+                                        scroller.scrollTop += 2200;
                                         scroller.dispatchEvent(new Event('scroll'));""");
                 Thread.sleep(10);
 
@@ -144,8 +126,7 @@ public class StockCrawlerService {
                 if (stockInfoList.size() == previousSize) break;
                 previousSize = stockInfoList.size();
             }
-            System.out.println(stockInfoList.size());
-            //set에 저장된 주식 정보를 DB에 저장
+            System.out.println("주식 정보 크롤링 완료 : " + stockInfoList.size() + "개");
             stockInfoRepository.saveAll(stockInfoList);
         } catch (TimeoutException e) {
             System.out.println("타임아웃: 요소를 찾지 못했습니다.");
