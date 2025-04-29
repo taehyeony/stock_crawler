@@ -51,7 +51,7 @@ public class StockCrawlerService {
 
         try {
             //초기에 테이블 렌더링이 완료될 때 까지 Wait
-            WebElement tableTemp = wait.until(driver -> {
+            wait.until(driver -> {
                 try {
                     return driver.findElement(checkTableLoadingSelector);
                 } catch (NoSuchElementException e) {
@@ -126,8 +126,8 @@ public class StockCrawlerService {
                 if (stockInfoList.size() == previousSize) break;
                 previousSize = stockInfoList.size();
             }
-            System.out.println("주식 정보 크롤링 완료 : " + stockInfoList.size() + "개");
             stockInfoRepository.saveAll(stockInfoList);
+            System.out.println("주식 정보 크롤링 완료 : " + stockInfoList.size() + "개");
         } catch (TimeoutException e) {
             System.out.println("타임아웃: 요소를 찾지 못했습니다.");
         } catch (Exception e) {
@@ -151,18 +151,20 @@ public class StockCrawlerService {
 
         //css Selector
         By kospiRadioSelector = By.cssSelector("#mktId_0_1");
+        By dateInputSelector = By.cssSelector("#trdDd");
         By searchButtonSelector = By.cssSelector("#jsSearchButton");
         By checkTableLoadingSelector = By.cssSelector("#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-GRID-MAIN-WRAPPER > div.CI-GRID-BODY-WRAPPER > div > div > table > tbody > tr:nth-child(1) > td:nth-child(1)");
         By stockTableSelector = By.cssSelector("#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-GRID-MAIN-WRAPPER > div.CI-GRID-BODY-WRAPPER > div > div > table > tbody");
         By loadingSelector = By.cssSelector("#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.loading-bar-wrap.small");
         By isOpeningDaySelector = By.cssSelector("#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-GRID-MAIN-WRAPPER > div.CI-GRID-BODY-WRAPPER > div > div > table > tbody > tr:nth-child(1) > td:nth-child(5)");
 
+        //주식 시세 정보 Set
         Set<StockPriceEntity> stockPriceList = new HashSet<>();
         int previousSizes = 0;
 
         try {
             //초기에 테이블 렌더링이 완료될 때 까지 Wait
-            WebElement tableTemp = wait.until(driver -> {
+            wait.until(driver -> {
                 try {
                     return driver.findElement(checkTableLoadingSelector);
                 } catch (NoSuchElementException e) {
@@ -171,9 +173,10 @@ public class StockCrawlerService {
             });
             //라디오 버튼 클릭, 날짜 변경 후 조회 버튼 클릭
             WebElement kospiRadioElement = driver.findElement(kospiRadioSelector);
+            WebElement dateInputElement = driver.findElement(dateInputSelector);
             WebElement searchButtonElement = driver.findElement(searchButtonSelector);
             js.executeScript("arguments[0].click();", kospiRadioElement);
-            js.executeScript("document.getElementById('trdDd').value=" + formatter.format(date));
+            js.executeScript("arguments[0].value = arguments[1];", dateInputElement, formatter.format(date));
             js.executeScript("arguments[0].click();", searchButtonElement);
             Thread.sleep(50);
 
@@ -183,6 +186,7 @@ public class StockCrawlerService {
 
             WebElement tableElementTemp = driver.findElement(stockTableSelector);
 
+            // 휴장일 인지 확인
             boolean isClosingDay = tableElementTemp.findElement(isOpeningDaySelector).getText().equals("-");
             if(isClosingDay){
                 return;
@@ -197,41 +201,25 @@ public class StockCrawlerService {
                 //화면에 존재하는 row를 한줄 씩 읽어오기
                 for (WebElement row : rows) {
                     try {
-                        String shortCode = row.findElement(By.cssSelector("td:nth-child(1)")).getText();
-                        if(Objects.equals(shortCode, "")){
-                            continue;
-                        }
-                        int closingPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(5)")).getText());
-                        int priceChange = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(6) > span")).getText());
-                        BigDecimal priceChangeRate = BigDecimal.valueOf(Double.parseDouble(row.findElement(By.cssSelector("td:nth-child(7)")).getText()));
+                        String shortCode = row.findElement(By.cssSelector("td:nth-child(1)")).getAttribute("textContent");
+                        int closingPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(5)")).getAttribute("textContent"));
+                        int priceChange = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(6) > span")).getAttribute("textContent"));
+                        BigDecimal priceChangeRate = BigDecimal.valueOf(Double.parseDouble(row.findElement(By.cssSelector("td:nth-child(7)")).getAttribute("textContent")));
                         if(priceChangeRate.signum()<0){
                             priceChange*=-1;
                         }
-                        int openingPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(8)")).getText());
-                        int highestPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(9)")).getText());
-                        int lowestPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(10)")).getText());
-                        long tradingVolume = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(11)")).getText());
+                        int openingPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(8)")).getAttribute("textContent"));
+                        int highestPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(9)")).getAttribute("textContent"));
+                        int lowestPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(10)")).getAttribute("textContent"));
+                        long tradingVolume = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(11)")).getAttribute("textContent"));
+                        long tradingValue = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(12)")).getAttribute("textContent"));
+                        long marketCap = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(13)")).getAttribute("textContent"));
+                        long listedStockNum = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(14)")).getAttribute("textContent"));
 
-                        //화면을 오른쪽으로 스크롤
-                        js.executeScript("""
-                                        let scroller = document.querySelector('#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-FREEZE-SCROLLER');
-                                        scroller.scrollLeft += 700;
-                                        scroller.dispatchEvent(new Event('scroll'));""");
-                        Thread.sleep(10);
+                        StockInfoEntity stockInfoEntity = stockInfoRepository.findByShortCode(shortCode);
 
-                        long tradingValue = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(12)")).getText());
-                        long marketCap = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(13)")).getText());
-                        long listedStockNum = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(14)")).getText());
-
-                        //다시 화면을 원 위치로 스크롤
-                        js.executeScript("""
-                                        let scroller = document.querySelector('#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-FREEZE-SCROLLER');
-                                        scroller.scrollLeft -= 700;
-                                        scroller.dispatchEvent(new Event('scroll'));""");
-                        Thread.sleep(10);
-
-                        StockPriceEntity stockPrice = StockPriceEntity.builder()
-                                .stockInfoEntity(stockInfoRepository.findByShortCode(shortCode))
+                        StockPriceEntity.StockPriceEntityBuilder stockPriceBuilder = StockPriceEntity.builder()
+                                .stockInfoEntity(stockInfoEntity)
                                 .closingPrice(closingPrice)
                                 .priceChange(priceChange)
                                 .priceChangeRate(priceChangeRate)
@@ -242,30 +230,25 @@ public class StockCrawlerService {
                                 .tradingValue(tradingValue)
                                 .marketCap(marketCap)
                                 .listedStockNum(listedStockNum)
-                                .date(date)
-                                .build();
-                        System.out.println(stockPrice.toString());
-                        try{
-                            stockPriceRepository.save(stockPrice);
-                        } catch (DataIntegrityViolationException e){
+                                .date(date);
 
+                        Long stockPriceId = stockPriceRepository.findStockPriceIdByShortCodeAndDate(shortCode,date);
+                        if(stockPriceId!=null){
+                            stockPriceBuilder.stockPriceId(stockPriceId);
                         }
+
+                        StockPriceEntity stockPrice = stockPriceBuilder.build();
+
                         stockPriceList.add(stockPrice);
                     } catch (NumberFormatException e){
-                        //다시 화면을 원 위치로 스크롤
-                        js.executeScript("""
-                                        let scroller = document.querySelector('#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-FREEZE-SCROLLER');
-                                        scroller.scrollLeft -= 700;
-                                        scroller.dispatchEvent(new Event('scroll'));""");
-                        Thread.sleep(10);
+                        e.printStackTrace();
                     }
-
                 }
 
                 //화면을 아래로 스크롤
                 js.executeScript("""
                                         let scroller = document.querySelector('#jsMdiContent > div > div.CI-GRID-AREA.CI-GRID-ON-WINDOWS > div.CI-GRID-WRAPPER > div.CI-FREEZE-SCROLLER');
-                                        scroller.scrollTop += 500;
+                                        scroller.scrollTop += 2000;
                                         scroller.dispatchEvent(new Event('scroll'));""");
                 Thread.sleep(10);
 
@@ -273,7 +256,8 @@ public class StockCrawlerService {
                 if(stockPriceList.size()==previousSizes) break;
                 previousSizes = stockPriceList.size();
             }
-            System.out.println(stockPriceList.size());
+            stockPriceRepository.saveAll(stockPriceList);
+            System.out.println("주식 시세 크롤링 완료 : " + stockPriceList.size() + "개 : " + date);
         } catch (TimeoutException e) {
             System.out.println("타임아웃: 요소를 찾지 못했습니다.");
         } catch (Exception e) {
