@@ -1,5 +1,6 @@
 package com.example.stock.crawler.crawler;
 
+import com.example.stock.crawler.cache.StockInfoCache;
 import com.example.stock.crawler.entity.StockInfoEntity;
 import com.example.stock.crawler.entity.StockPriceEntity;
 import com.example.stock.crawler.entity.enumeration.*;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -27,6 +29,7 @@ public class StockCrawlerService {
     private final WebDriver driver;
     private final StockInfoRepository stockInfoRepository;
     private final StockPriceRepository stockPriceRepository;
+    private final StockInfoCache stockInfoCache;
 
     /**
      * 주식 기본 정보 크롤링
@@ -216,7 +219,26 @@ public class StockCrawlerService {
                         long marketCap = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(13)")).getAttribute("textContent"));
                         long listedStockNum = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(14)")).getAttribute("textContent"));
 
-                        StockInfoEntity stockInfoEntity = stockInfoRepository.findByShortCode(shortCode);
+                        StockInfoEntity stockInfoEntity = stockInfoCache.getStockInfo(shortCode);
+                        if(stockInfoEntity==null){
+                            String stockName = row.findElement(By.cssSelector("td:nth-child(2)")).getAttribute("textContent");
+                            StockInfoEntity tempStockInfoEntity = StockInfoEntity.builder()
+                                    .shortCode(shortCode)
+                                    .standardCode("KR----------")
+                                    .korStockName(stockName)
+                                    .korShortStockName(stockName)
+                                    .engStockName(stockName)
+                                    .listingDate(java.sql.Date.valueOf("2001-01-01"))
+                                    .marketType(MarketType.KOSPI)
+                                    .certificateType(CertificateType.주권)
+                                    .department("")
+                                    .stockType(StockType.보통주)
+                                    .faceValue(0)
+                                    .listedStockNum(0L)
+                                    .build();
+                            stockInfoEntity = stockInfoRepository.save(tempStockInfoEntity);
+                            System.out.println(stockName + "(" + shortCode + ") 추가 등록");
+                        }
 
                         StockPriceEntity.StockPriceEntityBuilder stockPriceBuilder = StockPriceEntity.builder()
                                 .stockInfoEntity(stockInfoEntity)
@@ -257,7 +279,14 @@ public class StockCrawlerService {
                 previousSizes = stockPriceList.size();
             }
             stockPriceRepository.saveAll(stockPriceList);
-            System.out.println("주식 시세 크롤링 완료 : " + stockPriceList.size() + "개 : " + date);
+            LocalTime now = LocalTime.now();  // 현재 시간 가져오기
+
+            DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm:ss");  // 시:분:초 포맷
+            String formattedTime = now.format(formatter2);  // HH:mm:ss 문자열로 포맷
+
+            System.out.println(formattedTime + "   주식 시세 크롤링 완료 : " + stockPriceList.size() + "개 : " + date);
+        } catch (NumberFormatException e){
+          e.printStackTrace();
         } catch (TimeoutException e) {
             System.out.println("타임아웃: 요소를 찾지 못했습니다.");
         } catch (Exception e) {
