@@ -1,6 +1,5 @@
-package com.example.stock.crawler.crawler;
+package com.example.stock.crawler.service.crawler;
 
-import com.example.stock.crawler.entity.StockInfoEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
@@ -8,7 +7,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +20,7 @@ public class TestCrawlerService implements CommandLineRunner {
 //        stockCrawlerService.getStockPriceByDate(LocalDate.of(2025,03,06));
         List<LocalDate> dateList = new ArrayList<>();
 
-        LocalDate startDate = LocalDate.of(2022, 1, 18);
+        LocalDate startDate = LocalDate.of(2025, 2, 20);
         LocalDate endDate = LocalDate.now().minusDays(1);
 
         while (!startDate.isAfter(endDate)) {

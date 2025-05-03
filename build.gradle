@@ -31,7 +31,15 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+	// 크롤링
 	implementation 'org.seleniumhq.selenium:selenium-java:4.25.0'
+
+	// DeepLearning4j Core (딥러닝 모델 구성)
+	implementation 'org.deeplearning4j:deeplearning4j-core:1.0.0-beta7'
+	// ND4J: 수치 계산 라이브러리 (CPU 버전)
+	implementation 'org.nd4j:nd4j-native-platform:1.0.0-beta7'
+	// DataVec: 데이터 전처리, 정규화, 시계열 처리 등
+	implementation 'org.datavec:datavec-api:1.0.0-beta7'
 }
 
 tasks.named('test') {

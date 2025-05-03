@@ -12,9 +12,14 @@ import java.util.Objects;
 @AllArgsConstructor
 @Builder
 @Entity(name="stock_price")
-@Table(name="stock_price",indexes = {
-            @Index(name = "idx_price_volume_value", columnList = "closing_price, price_change_rate, trading_value")
-        })
+@Table(
+        name="stock_price",
+        indexes = {
+                @Index(name = "idx_price_volume_value", columnList = "closing_price, price_change_rate, trading_value")
+        },
+        uniqueConstraints = @UniqueConstraint(columnNames = {"short_code","date"})
+
+)
 public class StockPriceEntity {
 
     @Id

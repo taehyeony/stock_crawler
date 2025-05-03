@@ -22,7 +22,7 @@ public class StockInfoCache {
         for (StockInfoEntity stock : allStocks) {
             stockInfoCache.put(stock.getShortCode(), stock);
         }
-        System.out.println("✅ 캐시 초기화 완료: " + stockInfoCache.size() + "건");
+        System.out.println("캐시 초기화 완료: " + stockInfoCache.size() + "건");
     }
 
     // 주식 시세를 캐시에서 가져오거나, 없으면 크롤링하여 저장

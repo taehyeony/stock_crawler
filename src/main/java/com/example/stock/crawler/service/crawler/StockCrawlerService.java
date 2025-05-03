@@ -1,4 +1,4 @@
-package com.example.stock.crawler.crawler;
+package com.example.stock.crawler.service.crawler;
 
 import com.example.stock.crawler.cache.StockInfoCache;
 import com.example.stock.crawler.entity.StockInfoEntity;
@@ -293,6 +293,14 @@ public class StockCrawlerService {
             e.printStackTrace();
             System.out.println("예외 발생");
         }
+    }
+
+    /**
+     * 코스피 지수 크롤링
+     * @param date 날짜
+     */
+    public void getKospiByDate(LocalDate date) {
+        
     }
 
     public static int parseCommaSeparatedInt(String numberWithCommas) throws NumberFormatException {
