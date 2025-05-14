@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
 
 @Getter
 @NoArgsConstructor
@@ -16,12 +16,9 @@ import java.util.Date;
 public class KospiIndexEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int kospiId;
-
     @Temporal(TemporalType.DATE)
     @Column(nullable = false)
-    private Date date;
+    private LocalDate date;
 
     @Column(nullable = false,precision = 7,scale = 2)
     private BigDecimal closingPrice;
@@ -36,13 +33,13 @@ public class KospiIndexEntity {
     private BigDecimal openingPrice;
 
     @Column(nullable = false,precision = 7,scale = 2)
-    private BigDecimal highPrice;
+    private BigDecimal highestPrice;
 
     @Column(nullable = false,precision = 7,scale = 2)
-    private BigDecimal lowPrice;
+    private BigDecimal lowestPrice;
 
     @Column(nullable = false)
-    private Long tradingVolume;
+    private int tradingVolume;
 
     @Column(nullable = false)
     private Long tradingValue;

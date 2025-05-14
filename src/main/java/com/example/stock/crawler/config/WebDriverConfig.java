@@ -28,7 +28,7 @@ public class WebDriverConfig {
         chromeOptions.addArguments("--disable-extensions");
         chromeOptions.addArguments("--remote-allow-origins=*");
         chromeOptions.addArguments("user-agent=Mozilla/5.0");
-        chromeOptions.addArguments("--headless");
+//        chromeOptions.addArguments("--headless");
 
         WebDriver driver = new ChromeDriver(chromeOptions);
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));

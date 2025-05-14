@@ -6,6 +6,7 @@ import com.example.stock.crawler.entity.StockPriceEntity;
 import com.example.stock.crawler.entity.enumeration.*;
 import com.example.stock.crawler.repository.StockInfoRepository;
 import com.example.stock.crawler.repository.StockPriceRepository;
+import com.example.stock.crawler.util.NumberUtils;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.*;
 import org.openqa.selenium.NoSuchElementException;
@@ -94,11 +95,11 @@ public class StockCrawlerService {
                     StockType stockType = StockType.valueOf(row.findElement(By.cssSelector("td:nth-child(10)")).getAttribute("textContent"));
                     int faceValue = 0;
                     try {
-                        faceValue = Integer.parseInt(row.findElement(By.cssSelector("td:nth-child(11)")).getAttribute("textContent").replace(",",""));
+                        faceValue = NumberUtils.parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(11)")).getAttribute("textContent"));
                     } catch (NumberFormatException e){
                         faceValue = -1; //무액면인 경우
                     }
-                    Long listedStockNum = Long.valueOf(row.findElement(By.cssSelector("td:nth-child(12)")).getAttribute("textContent").replace(",",""));
+                    Long listedStockNum = NumberUtils.parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(12)")).getAttribute("textContent"));
                     Thread.sleep(10);
 
                     StockInfoEntity stockInfo = StockInfoEntity.builder()
@@ -137,6 +138,8 @@ public class StockCrawlerService {
             e.printStackTrace();
             System.out.println("예외 발생");
         }
+        // 바뀐 주식 정보를 다시 캐쉬
+        stockInfoCache.loadCacheFromDatabase();
     }
 
     /**
@@ -187,9 +190,9 @@ public class StockCrawlerService {
             wait.until(ExpectedConditions.not(ExpectedConditions.visibilityOfElementLocated(loadingSelector)));
             Thread.sleep(50);
 
+            // 휴장일 인지 확인
             WebElement tableElementTemp = driver.findElement(stockTableSelector);
 
-            // 휴장일 인지 확인
             boolean isClosingDay = tableElementTemp.findElement(isOpeningDaySelector).getText().equals("-");
             if(isClosingDay){
                 return;
@@ -205,40 +208,22 @@ public class StockCrawlerService {
                 for (WebElement row : rows) {
                     try {
                         String shortCode = row.findElement(By.cssSelector("td:nth-child(1)")).getAttribute("textContent");
-                        int closingPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(5)")).getAttribute("textContent"));
-                        int priceChange = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(6) > span")).getAttribute("textContent"));
+                        String stockName = row.findElement(By.cssSelector("td:nth-child(2)")).getAttribute("textContent");
+                        int closingPrice = NumberUtils.parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(5)")).getAttribute("textContent"));
+                        int priceChange = NumberUtils.parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(6) > span")).getAttribute("textContent"));
                         BigDecimal priceChangeRate = BigDecimal.valueOf(Double.parseDouble(row.findElement(By.cssSelector("td:nth-child(7)")).getAttribute("textContent")));
                         if(priceChangeRate.signum()<0){
                             priceChange*=-1;
                         }
-                        int openingPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(8)")).getAttribute("textContent"));
-                        int highestPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(9)")).getAttribute("textContent"));
-                        int lowestPrice = parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(10)")).getAttribute("textContent"));
-                        long tradingVolume = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(11)")).getAttribute("textContent"));
-                        long tradingValue = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(12)")).getAttribute("textContent"));
-                        long marketCap = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(13)")).getAttribute("textContent"));
-                        long listedStockNum = parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(14)")).getAttribute("textContent"));
+                        int openingPrice = NumberUtils.parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(8)")).getAttribute("textContent"));
+                        int highestPrice = NumberUtils.parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(9)")).getAttribute("textContent"));
+                        int lowestPrice = NumberUtils.parseCommaSeparatedInt(row.findElement(By.cssSelector("td:nth-child(10)")).getAttribute("textContent"));
+                        long tradingVolume = NumberUtils.parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(11)")).getAttribute("textContent"));
+                        long tradingValue = NumberUtils.parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(12)")).getAttribute("textContent"));
+                        long marketCap = NumberUtils.parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(13)")).getAttribute("textContent"));
+                        long listedStockNum = NumberUtils.parseCommaSeparatedLong(row.findElement(By.cssSelector("td:nth-child(14)")).getAttribute("textContent"));
 
-                        StockInfoEntity stockInfoEntity = stockInfoCache.getStockInfo(shortCode);
-                        if(stockInfoEntity==null){
-                            String stockName = row.findElement(By.cssSelector("td:nth-child(2)")).getAttribute("textContent");
-                            StockInfoEntity tempStockInfoEntity = StockInfoEntity.builder()
-                                    .shortCode(shortCode)
-                                    .standardCode("KR----------")
-                                    .korStockName(stockName)
-                                    .korShortStockName(stockName)
-                                    .engStockName(stockName)
-                                    .listingDate(java.sql.Date.valueOf("2001-01-01"))
-                                    .marketType(MarketType.KOSPI)
-                                    .certificateType(CertificateType.주권)
-                                    .department("")
-                                    .stockType(StockType.보통주)
-                                    .faceValue(0)
-                                    .listedStockNum(0L)
-                                    .build();
-                            stockInfoEntity = stockInfoRepository.save(tempStockInfoEntity);
-                            System.out.println(stockName + "(" + shortCode + ") 추가 등록");
-                        }
+                        StockInfoEntity stockInfoEntity = stockInfoCache.getStockInfo(shortCode, stockName);
 
                         StockPriceEntity.StockPriceEntityBuilder stockPriceBuilder = StockPriceEntity.builder()
                                 .stockInfoEntity(stockInfoEntity)
@@ -295,21 +280,4 @@ public class StockCrawlerService {
         }
     }
 
-    /**
-     * 코스피 지수 크롤링
-     * @param date 날짜
-     */
-    public void getKospiByDate(LocalDate date) {
-        
-    }
-
-    public static int parseCommaSeparatedInt(String numberWithCommas) throws NumberFormatException {
-        // 쉼표 제거 후 int로 변환
-        return Integer.parseInt(numberWithCommas.replace(",", ""));
-    }
-
-    public static Long parseCommaSeparatedLong(String numberWithCommas) throws NumberFormatException {
-        // 쉼표 제거 후 int로 변환
-        return Long.parseLong(numberWithCommas.replace(",", ""));
-    }
 }

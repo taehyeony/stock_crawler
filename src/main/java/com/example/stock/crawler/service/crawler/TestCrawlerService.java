@@ -13,6 +13,8 @@ import java.util.List;
 public class TestCrawlerService implements CommandLineRunner {
 
     private final StockCrawlerService stockCrawlerService;
+    private final KospiIndexCrawlerService kospiIndexCrawlerService;
+    private final OilCrawlerService oilCrawlerService;
 
     @Override
     public void run(String... args) throws Exception {
@@ -20,7 +22,7 @@ public class TestCrawlerService implements CommandLineRunner {
 //        stockCrawlerService.getStockPriceByDate(LocalDate.of(2025,03,06));
         List<LocalDate> dateList = new ArrayList<>();
 
-        LocalDate startDate = LocalDate.of(2025, 2, 20);
+        LocalDate startDate = LocalDate.of(2022, 1, 1);
         LocalDate endDate = LocalDate.now().minusDays(1);
 
         while (!startDate.isAfter(endDate)) {
@@ -29,8 +31,9 @@ public class TestCrawlerService implements CommandLineRunner {
         }
 
         for(LocalDate date: dateList){
-            stockCrawlerService.getStockPriceByDate(date);
+            oilCrawlerService.getKospiByDate(date);
+//            kospiIndexCrawlerService.getKospiByDate(date);
+//            stockCrawlerService.getStockPriceByDate(date);
         }
-
     }
 }
