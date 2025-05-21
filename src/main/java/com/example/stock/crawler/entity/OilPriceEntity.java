@@ -39,7 +39,6 @@ public class OilPriceEntity {
     @Column(nullable = false)
     private Long tradingValue;
 
-    @Temporal(TemporalType.DATE)
     @Column(nullable = false)
     private LocalDate date;
 }

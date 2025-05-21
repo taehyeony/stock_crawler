@@ -87,8 +87,7 @@ public class StockCrawlerService {
                     String korStockName = row.findElement(By.cssSelector("td:nth-child(3)")).getAttribute("textContent");
                     String korShortStockName = row.findElement(By.cssSelector("td:nth-child(4)")).getAttribute("textContent");
                     String engStockName = row.findElement(By.cssSelector("td:nth-child(5)")).getAttribute("textContent");
-                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd");
-                    Date listingDate = simpleDateFormat.parse(row.findElement(By.cssSelector("td:nth-child(6)")).getAttribute("textContent"));
+                    LocalDate listingDate = LocalDate.parse(row.findElement(By.cssSelector("td:nth-child(6)")).getAttribute("textContent"));
                     MarketType marketType = MarketType.valueOf(row.findElement(By.cssSelector("td:nth-child(7)")).getAttribute("textContent"));
                     CertificateType certificateType = CertificateType.valueOf(row.findElement(By.cssSelector("td:nth-child(8)")).getAttribute("textContent"));
                     String department = row.findElement(By.cssSelector("td:nth-child(9)")).getAttribute("textContent");

@@ -23,11 +23,13 @@ public class GoldPriceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int goldId;
 
+    @Column(nullable = false)
+    private int goldCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private GoldType goldType;
 
-    @Temporal(TemporalType.DATE)
     @Column(nullable = false)
     private LocalDate date;
 

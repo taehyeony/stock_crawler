@@ -60,7 +60,6 @@ public class StockPriceEntity {
     @Column(nullable = false)
     private Long listedStockNum;
 
-    @Temporal(TemporalType.DATE)
     @Column(nullable = false)
     private LocalDate date;
 

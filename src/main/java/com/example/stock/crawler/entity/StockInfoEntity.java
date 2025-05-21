@@ -6,6 +6,7 @@ import com.example.stock.crawler.entity.enumeration.StockType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -35,9 +36,8 @@ public class StockInfoEntity {
     @Column(length = 100,nullable = false) //길이 100, 빈칸 비 허용
     private String engStockName;
 
-    @Temporal(TemporalType.DATE) // YYYY-MM-DD
     @Column(nullable = false) //빈칸 비 허용
-    private Date listingDate;
+    private LocalDate listingDate;
 
     @Enumerated(EnumType.STRING) // enum 타입 사용 선언
     @Column(nullable = false)

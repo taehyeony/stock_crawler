@@ -9,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -51,7 +52,7 @@ public class StockInfoCache {
                 .korStockName(stockName)
                 .korShortStockName(stockName)
                 .engStockName(stockName)
-                .listingDate(java.sql.Date.valueOf("2001-01-01"))
+                .listingDate(LocalDate.parse("2001-01-01"))
                 .marketType(MarketType.KOSPI)
                 .certificateType(CertificateType.주권)
                 .department("")

@@ -16,7 +16,6 @@ import java.time.LocalDate;
 public class KospiIndexEntity {
 
     @Id
-    @Temporal(TemporalType.DATE)
     @Column(nullable = false)
     private LocalDate date;
 
